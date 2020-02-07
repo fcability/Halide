@@ -48,10 +48,10 @@ jobs:
             cmake_toolset: "host=x64"
 
     steps:
-    - name: Configure Windows
-      if: startsWith(matrix.os, 'windows')
-      run: |
-        choco install curl
+    # - name: Configure Windows
+    #   if: startsWith(matrix.os, 'windows')
+    #   run: |
+    #     choco install curl
 
     - name: Configure Env Vars
       shell: bash
