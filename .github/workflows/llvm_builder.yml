@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build_llvm:
-    name: Build LLVM llvm-${{matrix.llvm_version}} for ${{matrix.os}}-${{matrix.bits}}
+    name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.bits}}
     runs-on: ${{matrix.os}}
     env:
       CC: ${{matrix.cc}}
@@ -47,6 +47,14 @@ jobs:
             cmake_arch: "x64"
           - os: windows-latest
             cmake_toolset: "host=x64"
+
+        exclude:
+          # Don't attempt 32-bit builds for macos
+          - os: macos-latest
+            bits: 32
+          # TODO
+          - os: ubuntu-18.04
+            bits: 32
 
     steps:
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.bits}}
