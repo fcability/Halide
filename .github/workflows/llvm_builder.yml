@@ -102,6 +102,8 @@ jobs:
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
           # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
+          # Note that LLVM_INSTALL_TOOLCHAIN_ONLY=ON is essential; without it,
+          # we will run out of disk space (!) on the Windows VMs doing a normal build.
           cmake \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
