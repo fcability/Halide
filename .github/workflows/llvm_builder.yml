@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build_llvm:
-    name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.bits}}
+    name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
     runs-on: ${{matrix.os}}
     env:
       CC: ${{matrix.cc}}
@@ -57,7 +57,7 @@ jobs:
             bits: 32
 
     steps:
-    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.bits}}
+    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
       run: |
         # Demangle Windows names, to simplify CMake stuff later
@@ -99,7 +99,7 @@ jobs:
 
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
-          # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
+          # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
           cmake \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
@@ -109,13 +109,15 @@ jobs:
             -D LLVM_ENABLE_RTTI=ON \
             -D LLVM_ENABLE_TERMINFO=OFF \
             -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
+            -D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF \
+            -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
             -G "${CMAKE_GEN}" \
             -A "${{matrix.cmake_arch}}" \
             -T "${{matrix.cmake_toolset}}" \
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          PARALLEL_JOBS=$(expr $(nproc) + 2)
+          PARALLEL_JOBS=4
           cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
           git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
