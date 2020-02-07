@@ -10,11 +10,11 @@ jobs:
       CXX: ${{matrix.cxx}}
 
     strategy:
-      fail-fast: true  # Stop running all jobs if even one fails
+      fail-fast: false  # Keep running even if one job fails
       matrix:
         os: [windows-latest]
-        bits: [64]
-        llvm_version: [9]
+        bits: [32, 64]
+        llvm_version: [8, 9, trunk]
         build_tool: [cmake_shared]
         include:
           - llvm_version: 8
@@ -48,96 +48,120 @@ jobs:
             cmake_toolset: "host=x64"
 
     steps:
-    - name: Configure Env Vars
+    - name: Build llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}
       shell: bash
       run: |
         # Demangle Windows names, to simplify CMake stuff later
         _ROOT=${GITHUB_WORKSPACE//\\//}
 
-        # This is the trick GitHub Actions uses to allow us to set env vars across all subsequent job steps
-        echo ::set-env name=CC::"${{matrix.cc}}"
-        echo ::set-env name=CXX::"${{matrix.cxx}}"
-        echo ::set-env name=LLVM_INSTALL_DIR::"${_ROOT}/llvm"
-        echo ::set-env name=LLVM_CONFIG::"${_ROOT}/llvm/bin/llvm-config"
-        echo ::set-env name=PARALLEL_JOBS::"$(expr $(nproc) + 2)"
+        export CC="${{matrix.cc}}"
+        export CXX="${{matrix.cxx}}"
+
+        PARALLEL_JOBS=$(expr $(nproc) + 2)
         echo ::set-env name=UPLOADS::"https://buildbot.halide-lang.org/llvm"
 
-    # - name: Build llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}
-    #   shell: bash
-    #   run: |
-    #     LLVM_ID="llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}"
-    #     LLVM_BUILD_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-build"
-    #     LLVM_INSTALL_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-install"
-    #     LLVM_SOURCE_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-source"
+        VER=${{matrix.config.llvm_version}}
+        OS_FULL=${{matrix.config.os}}
+        OS=${OS_FULL%-*}
+        BITS=${{matrix.config.llvm_bits}}
 
-    #     git clone https://github.com/llvm/llvm-project.git \
-    #       "${LLVM_SOURCE_DIR}" \
-    #       --branch ${{matrix.config.llvm_branch}} \
-    #       --single-branch \
-    #       --depth 1
+        LLVM_ID="llvm-${VER}-${OS}-${BITS}"
+        LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
+        LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
+        LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
+        LLVM_INSTALL_TGZ="${_ROOT}/${LLVM_ID}.tgz"
+        LLVM_URL="${UPLOADS}/${LLVM_ID}.tgz"
 
-    #     LLVM_BUILD_32_BITS=$([ ${{matrix.config.llvm_bits}} == 32 ] && echo "ON" || echo "OFF")
+        # TODO: for trunk, we should tag with git hash somehow -- in url?
 
+        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_URL}; then
 
-    #     # TODO: add WebAssembly for trunk
-    #     # TODO: disable assertions for mingw?
-    #     # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
-    #     cmake \
-    #       -D CMAKE_BUILD_TYPE=Release \
-    #       -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}"
-    #       -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
-    #       -D LLVM_ENABLE_ASSERTIONS=ON \
-    #       -D LLVM_ENABLE_PROJECTS="clang;lld" \
-    #       -D LLVM_ENABLE_RTTI=ON \
-    #       -D LLVM_ENABLE_TERMINFO=OFF \
-    #       -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
-    #       -B "${LLVM_BUILD_DIR}" \
-    #       -S "${LLVM_SOURCE_DIR}"
+          echo "${LLVM_URL} already exists, no need to build"
 
-    #     PARALLEL_JOBS=$(expr $(nproc) + 2)
-    #     cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
-
-    - name: Build zlib ${{matrix.os}} ${{matrix.bits}}
-      shell: bash
-      run: |
-        # set -eux
-
-        zlib_ID="zlib-${{matrix.os}}-${{matrix.bits}}"
-        zlib_SOURCE_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-source"
-        zlib_BUILD_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-build"
-        zlib_INSTALL_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-install"
-        zlib_INSTALL_TGZ="${GITHUB_WORKSPACE}/${zlib_ID}.tgz"
-        zlib_URL="${UPLOADS}/${zlib_ID}.tgz"
-
-        which curl
-
-        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${zlib_URL}; then
-          echo "${zlib_URL} already exists, no need to build"
         else
-          echo "${zlib_URL} not found, rebuilding"
 
-          git clone https://github.com/glennrp/zlib.git \
-            "${zlib_SOURCE_DIR}" \
-            --branch master \
+          echo "${LLVM_URL} not found, rebuilding"
+
+          git clone https://github.com/llvm/llvm-project.git \
+            "${LLVM_SOURCE_DIR}" \
+            --branch ${{matrix.config.llvm_branch}} \
             --single-branch \
             --depth 1
 
+          LLVM_BUILD_32_BITS=$([ ${BITS} == 32 ] && echo "ON" || echo "OFF")
+
+          # TODO: add WebAssembly for trunk
+          # TODO: disable assertions for mingw?
+          # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
           cmake \
             -D CMAKE_BUILD_TYPE=Release \
-            -D CMAKE_INSTALL_PREFIX="${zlib_INSTALL_DIR}" \
+            -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}"
+            -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
+            -D LLVM_ENABLE_ASSERTIONS=ON \
+            -D LLVM_ENABLE_PROJECTS="clang;lld" \
+            -D LLVM_ENABLE_RTTI=ON \
+            -D LLVM_ENABLE_TERMINFO=OFF \
+            -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -G "${{matrix.cmake_gen}}" \
             -A "${{matrix.cmake_arch}}" \
             -T "${{matrix.cmake_toolset}}" \
-            -B "${zlib_BUILD_DIR}" \
-            -S "${zlib_SOURCE_DIR}"
+            -B "${LLVM_BUILD_DIR}" \
+            -S "${LLVM_SOURCE_DIR}"
 
-          cmake --build "${zlib_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+          cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
-          tar -czf ${zlib_INSTALL_TGZ} ${zlib_INSTALL_DIR}
+          git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
+
+          tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
 
           curl \
-            --upload-file ${zlib_INSTALL_TGZ} \
+            --upload-file ${LLVM_INSTALL_TGZ} \
             --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-            ${zlib_URL}
+            ${LLVM_URL}
 
         fi
+
+    # - name: Build zlib ${{matrix.os}} ${{matrix.bits}}
+    #   shell: bash
+    #   run: |
+    #     # set -eux
+
+    #     zlib_ID="zlib-${{matrix.os}}-${{matrix.bits}}"
+    #     zlib_SOURCE_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-source"
+    #     zlib_BUILD_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-build"
+    #     zlib_INSTALL_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-install"
+    #     zlib_INSTALL_TGZ="${GITHUB_WORKSPACE}/${zlib_ID}.tgz"
+    #     zlib_URL="${UPLOADS}/${zlib_ID}.tgz"
+
+    #     which curl
+
+    #     if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${zlib_URL}; then
+    #       echo "${zlib_URL} already exists, no need to build"
+    #     else
+    #       echo "${zlib_URL} not found, rebuilding"
+
+    #       git clone https://github.com/glennrp/zlib.git \
+    #         "${zlib_SOURCE_DIR}" \
+    #         --branch master \
+    #         --single-branch \
+    #         --depth 1
+
+    #       cmake \
+    #         -D CMAKE_BUILD_TYPE=Release \
+    #         -D CMAKE_INSTALL_PREFIX="${zlib_INSTALL_DIR}" \
+    #         -G "${{matrix.cmake_gen}}" \
+    #         -A "${{matrix.cmake_arch}}" \
+    #         -T "${{matrix.cmake_toolset}}" \
+    #         -B "${zlib_BUILD_DIR}" \
+    #         -S "${zlib_SOURCE_DIR}"
+
+    #       cmake --build "${zlib_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+
+    #       tar -czf ${zlib_INSTALL_TGZ} ${zlib_INSTALL_DIR}
+
+    #       curl \
+    #         --upload-file ${zlib_INSTALL_TGZ} \
+    #         --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
+    #         ${zlib_URL}
+
+    #     fi
