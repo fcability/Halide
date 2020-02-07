@@ -79,6 +79,8 @@ jobs:
         zlib_INSTALL_TGZ="${GITHUB_WORKSPACE}/${zlib_ID}.tgz"
         zlib_URL="${UPLOADS}/${zlib_ID}.tgz"
 
+        which curl
+
         if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${zlib_URL}; then
           echo "${zlib_URL} already exists, no need to build"
         else
@@ -106,6 +108,6 @@ jobs:
           curl \
             --upload-file ${zlib_INSTALL_TGZ} \
             --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-            --output /dev/stdout \
             ${zlib_URL}
+
         fi
