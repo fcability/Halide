@@ -57,9 +57,6 @@ jobs:
         export CC="${{matrix.cc}}"
         export CXX="${{matrix.cxx}}"
 
-        PARALLEL_JOBS=$(expr $(nproc) + 2)
-        echo ::set-env name=UPLOADS::"https://buildbot.halide-lang.org/llvm"
-
         VER=${{matrix.llvm_version}}
         OS_FULL=${{matrix.os}}
         OS=${OS_FULL%-*}
@@ -70,7 +67,7 @@ jobs:
         LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
         LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
         LLVM_INSTALL_TGZ="${_ROOT}/${LLVM_ID}.tgz"
-        LLVM_URL="${UPLOADS}/${LLVM_ID}.tgz"
+        LLVM_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
 
         # TODO: for trunk, we should tag with git hash somehow -- in url?
 
@@ -87,6 +84,8 @@ jobs:
             --branch ${{matrix.llvm_branch}} \
             --single-branch \
             --depth 1
+
+          ls -l ${LLVM_SOURCE_DIR}
 
           LLVM_BUILD_32_BITS=$([ ${BITS} == 32 ] && echo "ON" || echo "OFF")
 
@@ -108,6 +107,7 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}"
 
+          PARALLEL_JOBS=$(expr $(nproc) + 2)
           cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
           git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
