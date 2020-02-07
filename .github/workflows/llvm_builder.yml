@@ -17,7 +17,6 @@ jobs:
         os: [windows-latest, ubuntu-18.04, macos-latest]
         llvm_version: [8, 9, trunk]
         build_tool: [cmake_shared]
-        cmake_gen: ["Unix Makefiles"]
         include:
           - llvm_version: 8
             llvm_branch: release/8.x
@@ -84,7 +83,12 @@ jobs:
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
-          set -eux
+          CMAKE_GEN="${{matrix.cmake_gen}}"
+          if [ -z "${CMAKE_GEN}" ]; then
+            CMAKE_GEN="Unix Makefiles"
+          fi
+
+
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
           # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
@@ -97,7 +101,7 @@ jobs:
             -D LLVM_ENABLE_RTTI=ON \
             -D LLVM_ENABLE_TERMINFO=OFF \
             -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
-            -G "${{matrix.cmake_gen}}" \
+            -G "${CMAKE_GEN}" \
             -A "${{matrix.cmake_arch}}" \
             -T "${{matrix.cmake_toolset}}" \
             -B "${LLVM_BUILD_DIR}" \
