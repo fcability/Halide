@@ -60,6 +60,8 @@ jobs:
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
       run: |
+        set -eux
+
         # Demangle Windows names, to simplify CMake stuff later
         _ROOT=${GITHUB_WORKSPACE//\\//}
 
@@ -107,9 +109,10 @@ jobs:
             -D LLVM_ENABLE_ASSERTIONS=ON \
             -D LLVM_ENABLE_PROJECTS="clang;lld" \
             -D LLVM_ENABLE_RTTI=ON \
-            -D LLVM_ENABLE_TERMINFO=OFF \
-            -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF \
+            -D LLVM_ENABLE_TERMINFO=OFF \
+            -D LLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+            -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
             -G "${CMAKE_GEN}" \
             -A "${{matrix.cmake_arch}}" \
@@ -120,6 +123,7 @@ jobs:
           PARALLEL_JOBS=4
           cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
+          cd ${LLVM_SOURCE_DIR}
           git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
 
           tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
