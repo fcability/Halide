@@ -62,6 +62,41 @@ jobs:
         echo ::set-env name=PARALLEL_JOBS::"$(expr $(nproc) + 2)"
         echo ::set-env name=UPLOADS::"https://buildbot.halide-lang.org/llvm"
 
+    # - name: Build llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}
+    #   shell: bash
+    #   run: |
+    #     LLVM_ID="llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}"
+    #     LLVM_BUILD_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-build"
+    #     LLVM_INSTALL_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-install"
+    #     LLVM_SOURCE_DIR="${GITHUB_WORKSPACE}/${LLVM_ID}-source"
+
+    #     git clone https://github.com/llvm/llvm-project.git \
+    #       "${LLVM_SOURCE_DIR}" \
+    #       --branch ${{matrix.config.llvm_branch}} \
+    #       --single-branch \
+    #       --depth 1
+
+    #     LLVM_BUILD_32_BITS=$([ ${{matrix.config.llvm_bits}} == 32 ] && echo "ON" || echo "OFF")
+
+
+    #     # TODO: add WebAssembly for trunk
+    #     # TODO: disable assertions for mingw?
+    #     # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
+    #     cmake \
+    #       -D CMAKE_BUILD_TYPE=Release \
+    #       -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}"
+    #       -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
+    #       -D LLVM_ENABLE_ASSERTIONS=ON \
+    #       -D LLVM_ENABLE_PROJECTS="clang;lld" \
+    #       -D LLVM_ENABLE_RTTI=ON \
+    #       -D LLVM_ENABLE_TERMINFO=OFF \
+    #       -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
+    #       -B "${LLVM_BUILD_DIR}" \
+    #       -S "${LLVM_SOURCE_DIR}"
+
+    #     PARALLEL_JOBS=$(expr $(nproc) + 2)
+    #     cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+
     - name: Build zlib ${{matrix.os}} ${{matrix.bits}}
       shell: bash
       run: |
