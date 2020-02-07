@@ -48,7 +48,7 @@ jobs:
             cmake_toolset: "host=x64"
 
     steps:
-    - name: Build llvm-${{matrix.config.llvm_version}}-${{matrix.config.os}}-${{matrix.config.llvm_bits}}
+    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.llvm_bits}}
       shell: bash
       run: |
         # Demangle Windows names, to simplify CMake stuff later
@@ -60,10 +60,10 @@ jobs:
         PARALLEL_JOBS=$(expr $(nproc) + 2)
         echo ::set-env name=UPLOADS::"https://buildbot.halide-lang.org/llvm"
 
-        VER=${{matrix.config.llvm_version}}
-        OS_FULL=${{matrix.config.os}}
+        VER=${{matrix.llvm_version}}
+        OS_FULL=${{matrix.os}}
         OS=${OS_FULL%-*}
-        BITS=${{matrix.config.llvm_bits}}
+        BITS=${{matrix.llvm_bits}}
 
         LLVM_ID="llvm-${VER}-${OS}-${BITS}"
         LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
@@ -84,7 +84,7 @@ jobs:
 
           git clone https://github.com/llvm/llvm-project.git \
             "${LLVM_SOURCE_DIR}" \
-            --branch ${{matrix.config.llvm_branch}} \
+            --branch ${{matrix.llvm_branch}} \
             --single-branch \
             --depth 1
 
