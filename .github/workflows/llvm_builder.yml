@@ -1,0 +1,111 @@
+name: Halide LLVM Builder
+on: push
+
+jobs:
+  build_llvm:
+    name: Build LLVM llvm-${{matrix.llvm_version}} for ${{matrix.os}}-${{matrix.bits}}
+    runs-on: ${{matrix.os}}
+    env:
+      CC: ${{matrix.cc}}
+      CXX: ${{matrix.cxx}}
+
+    strategy:
+      fail-fast: true  # Stop running all jobs if even one fails
+      matrix:
+        os: [windows-latest]
+        bits: [64]
+        llvm_version: [9]
+        build_tool: [cmake_shared]
+        include:
+          - llvm_version: 8
+            llvm_branch: release/8.x
+          - llvm_version: 9
+            llvm_branch: release/9.x
+          - llvm_version: 10
+            llvm_branch: release/10.x
+          - llvm_version: trunk
+            llvm_branch: master
+
+          - os: macos-latest
+            cc: clang
+          - os: macos-latest
+            cxx: clang++
+
+          - os: ubuntu-18.04
+            cc: gcc
+          - os: ubuntu-18.04
+            cxx: g++
+
+          - os: windows-latest
+            cc: cl
+          - os: windows-latest
+            cxx: cl
+          - os: windows-latest
+            cmake_gen: "Visual Studio 16"
+          - os: windows-latest
+            cmake_arch: "x64"
+          - os: windows-latest
+            cmake_toolset: "host=x64"
+
+    steps:
+    - name: Configure Windows
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        choco install curl
+
+    - name: Configure Env Vars
+      shell: bash
+      run: |
+        # Demangle Windows names, to simplify CMake stuff later
+        _ROOT=${GITHUB_WORKSPACE//\\//}
+
+        # This is the trick GitHub Actions uses to allow us to set env vars across all subsequent job steps
+        echo ::set-env name=CC::"${{matrix.cc}}"
+        echo ::set-env name=CXX::"${{matrix.cxx}}"
+        echo ::set-env name=LLVM_INSTALL_DIR::"${_ROOT}/llvm"
+        echo ::set-env name=LLVM_CONFIG::"${_ROOT}/llvm/bin/llvm-config"
+        echo ::set-env name=PARALLEL_JOBS::"$(expr $(nproc) + 2)"
+        echo ::set-env name=UPLOADS::"https://buildbot.halide-lang.org/llvm"
+
+    - name: Build zlib ${{matrix.os}} ${{matrix.bits}}
+      shell: bash
+      run: |
+        set -eux
+
+        zlib_ID="zlib-${{matrix.os}}-${{matrix.bits}}"
+        zlib_SOURCE_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-source"
+        zlib_BUILD_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-build"
+        zlib_INSTALL_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-install"
+        zlib_INSTALL_TGZ="${GITHUB_WORKSPACE}/${zlib_ID}.tgz"
+        zlib_URL="${UPLOADS}/${zlib_ID}.tgz"
+
+        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${zlib_URL}; then
+          echo "${zlib_URL} already exists, no need to build"
+        else
+          echo "${zlib_URL} not found, rebuilding"
+
+          git clone https://github.com/glennrp/zlib.git \
+            "${zlib_SOURCE_DIR}" \
+            --branch master \
+            --single-branch \
+            --depth 1
+
+          cmake \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_INSTALL_PREFIX="${zlib_INSTALL_DIR}" \
+            -G "${{matrix.cmake_gen}}" \
+            -A "${{matrix.cmake_arch}}" \
+            -T "${{matrix.cmake_toolset}}" \
+            -B "${zlib_BUILD_DIR}" \
+            -S "${zlib_SOURCE_DIR}"
+
+          cmake --build "${zlib_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+
+          tar -czf ${GITHUB_WORKSPACE}/zlib-${{matrix.os}}-${{matrix.bits}}-install.tgz ${zlib_INSTALL_DIR}
+
+          curl \
+            --upload-file ${zlib_INSTALL_TGZ} \
+            --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
+            --output /dev/stdout \
+            ${zlib_URL}
+        fi
