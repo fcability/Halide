@@ -48,11 +48,6 @@ jobs:
             cmake_toolset: "host=x64"
 
     steps:
-    # - name: Configure Windows
-    #   if: startsWith(matrix.os, 'windows')
-    #   run: |
-    #     choco install curl
-
     - name: Configure Env Vars
       shell: bash
       run: |
@@ -70,7 +65,7 @@ jobs:
     - name: Build zlib ${{matrix.os}} ${{matrix.bits}}
       shell: bash
       run: |
-        set -eux
+        # set -eux
 
         zlib_ID="zlib-${{matrix.os}}-${{matrix.bits}}"
         zlib_SOURCE_DIR="${GITHUB_WORKSPACE}/${zlib_ID}-source"
