@@ -17,6 +17,7 @@ jobs:
         os: [windows-latest, ubuntu-18.04, macos-latest]
         llvm_version: [8, 9, trunk]
         build_tool: [cmake_shared]
+        cmake_gen: ["Unix Makefiles"]
         include:
           - llvm_version: 8
             llvm_branch: release/8.x
@@ -83,6 +84,7 @@ jobs:
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
+          set -eux
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
           # TODO: LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS = FORCE_OFF for macos
