@@ -12,8 +12,9 @@ jobs:
     strategy:
       fail-fast: false  # Keep running even if one job fails
       matrix:
-        os: [windows-latest]
+        arch: [x86]
         bits: [32, 64]
+        os: [windows-latest, ubuntu-18.04, macos-latest]
         llvm_version: [8, 9, trunk]
         build_tool: [cmake_shared]
         include:
@@ -57,12 +58,7 @@ jobs:
         export CC="${{matrix.cc}}"
         export CXX="${{matrix.cxx}}"
 
-        VER=${{matrix.llvm_version}}
-        OS_FULL=${{matrix.os}}
-        OS=${OS_FULL%-*}
-        BITS=${{matrix.bits}}
-
-        LLVM_ID="llvm-${VER}-${OS}-${BITS}"
+        LLVM_ID="llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.os}}-${{matrix.bits}}"
         LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
         LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
         LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
@@ -85,7 +81,7 @@ jobs:
             --single-branch \
             --depth 1
 
-          LLVM_BUILD_32_BITS=$([ ${BITS} == 32 ] && echo "ON" || echo "OFF")
+          LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
