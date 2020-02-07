@@ -48,7 +48,7 @@ jobs:
             cmake_toolset: "host=x64"
 
     steps:
-    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.llvm_bits}}
+    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.os}}-${{matrix.bits}}
       shell: bash
       run: |
         # Demangle Windows names, to simplify CMake stuff later
@@ -63,7 +63,7 @@ jobs:
         VER=${{matrix.llvm_version}}
         OS_FULL=${{matrix.os}}
         OS=${OS_FULL%-*}
-        BITS=${{matrix.llvm_bits}}
+        BITS=${{matrix.bits}}
 
         LLVM_ID="llvm-${VER}-${OS}-${BITS}"
         LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
