@@ -144,7 +144,6 @@ jobs:
 
         fi
 
-    steps:
     - name: Report llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       if: failure()
       shell: bash
