@@ -60,14 +60,14 @@ jobs:
             bits: 32
 
     steps:
-    - name: foo
-      shell: powershell
-      run: |
-        Get-WmiObject -List
+    # - name: foo
+    #   shell: powershell
+    #   run: |
+    #     Get-WmiObject -List
 
-        Get-WmiObject -Class Win32_logicaldisk
+    #     Get-WmiObject -Class Win32_logicaldisk
 
-        Get-WmiObject -Class Win32_Product
+    #     Get-WmiObject -Class Win32_Product
 
     # - name: foo2
     #   shell: powershell
@@ -80,31 +80,31 @@ jobs:
     #         $i.FullName + " -- " + "{0:N2}" -f ($subFolderItems.sum / 1MB) + " MB"
     #     }
 
-    - name: Clean Up Windows
-      if: startsWith(matrix.os, 'windows')
-      shell: bash
-      run: |
-        # Remove preinstalled stuff on the Windows VM that takes a lot of
-        # space but is unimportant to us (so that we have enough space to
-        # actually build)
-        set -eux
+    # - name: Clean Up Windows
+    #   if: startsWith(matrix.os, 'windows')
+    #   shell: bash
+    #   run: |
+    #     # Remove preinstalled stuff on the Windows VM that takes a lot of
+    #     # space but is unimportant to us (so that we have enough space to
+    #     # actually build)
+    #     set -eux
 
-        # sudo rm -rf "C:/Program Files/Boost"
-        # sudo rm -rf "C:/Program Files/Unity"
+    #     # sudo rm -rf "C:/Program Files/Boost"
+    #     # sudo rm -rf "C:/Program Files/Unity"
 
-        echo "C"
-        sudo du -h -d 2 "C:/Program Files"
+    #     echo "C"
+    #     sudo du -h -d 2 "C:/Program Files"
 
-        echo "C2"
-        sudo du -h -d 2 "C:/Program Files (x86)"
+    #     echo "C2"
+    #     sudo du -h -d 2 "C:/Program Files (x86)"
 
-        echo "D"
-        sudo du -h -d 2 "D:/Program Files"
+    #     echo "D"
+    #     sudo du -h -d 2 "D:/Program Files"
 
-        echo "D2"
-        sudo du -h -d 2 "D:/Program Files (x86)"
+    #     echo "D2"
+    #     sudo du -h -d 2 "D:/Program Files (x86)"
 
-        exit 23
+    #     exit 23
 
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
@@ -133,6 +133,8 @@ jobs:
         else
 
           echo "${LLVM_URL} not found, rebuilding"
+
+          du -h -d 2 ${GITHUB_WORKSPACE}
 
           git clone https://github.com/llvm/llvm-project.git \
             "${LLVM_SOURCE_DIR}" \
@@ -172,21 +174,21 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          PARALLEL_JOBS=4
-          cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+          # PARALLEL_JOBS=4
+          # cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
-          du -h -d 2 ${LLVM_BUILD_DIR}
-          du -h -d 2 ${LLVM_INSTALL_DIR}
+          # du -h -d 2 ${LLVM_BUILD_DIR}
+          # du -h -d 2 ${LLVM_INSTALL_DIR}
 
-          cd ${LLVM_SOURCE_DIR}
-          git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
+          # cd ${LLVM_SOURCE_DIR}
+          # git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
 
-          tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
+          # tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
 
-          curl \
-            --upload-file ${LLVM_INSTALL_TGZ} \
-            --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-            ${LLVM_URL}
+          # curl \
+          #   --upload-file ${LLVM_INSTALL_TGZ} \
+          #   --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
+          #   ${LLVM_URL}
 
         fi
 
