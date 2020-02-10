@@ -211,8 +211,12 @@ jobs:
         echo LLVM_BUILD_DIR
         du -h -d 2 ${LLVM_BUILD_DIR}
 
-        echo LLVM_INSTALL_DIR
-        du -h -d 2 ${LLVM_INSTALL_DIR}
+        # echo LLVM_INSTALL_DIR
+        # du -h -d 2 ${LLVM_INSTALL_DIR}
 
+    - uses: actions/upload-artifact@v1
+      with:
+        name: my-artifact
+        path: ${LLVM_BUILD_DIR}
 
 
