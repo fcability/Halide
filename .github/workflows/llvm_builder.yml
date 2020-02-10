@@ -151,6 +151,14 @@ jobs:
             CMAKE_GEN="Unix Makefiles"
           fi
 
+          if [[ ${{matrix.os}} == windows* ]]; then
+            # Windows VMs don't have enough RAM to more than this
+            # concurrently (will fail to compile intermittently)
+            PARALLEL_JOBS=2
+          else
+            PARALLEL_JOBS=4
+          fi
+
           # TODO: add WebAssembly for trunk
           # TODO: disable assertions for mingw?
           # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
@@ -182,7 +190,6 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          PARALLEL_JOBS=2
           cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
           du -h -d 2 ${LLVM_BUILD_DIR}
