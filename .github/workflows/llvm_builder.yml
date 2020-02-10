@@ -65,6 +65,9 @@ jobs:
       run: |
         Get-WmiObject -Class Win32_Product
 
+    - name: foo2
+      shell: powershell
+      run: |
         $path = "$Env:Programfiles"
         $colItems = Get-ChildItem $path | Where-Object {$_.PSIsContainer -eq $true} | Sort-Object
         foreach ($i in $colItems)
