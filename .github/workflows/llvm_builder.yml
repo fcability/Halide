@@ -63,18 +63,22 @@ jobs:
     - name: foo
       shell: powershell
       run: |
+        Get-WmiObject -List
+
+        Get-WmiObject -Class Win32_logicaldisk
+
         Get-WmiObject -Class Win32_Product
 
-    - name: foo2
-      shell: powershell
-      run: |
-        $path = "$Env:Programfiles"
-        $colItems = Get-ChildItem $path | Where-Object {$_.PSIsContainer -eq $true} | Sort-Object
-        foreach ($i in $colItems)
-        {
-            $subFolderItems = Get-ChildItem $i.FullName -recurse -force | Where-Object {$_.PSIsContainer -eq $false} | Measure-Object -property Length -sum | Select-Object Sum
-            $i.FullName + " -- " + "{0:N2}" -f ($subFolderItems.sum / 1MB) + " MB"
-        }
+    # - name: foo2
+    #   shell: powershell
+    #   run: |
+    #     $path = "$Env:Programfiles"
+    #     $colItems = Get-ChildItem $path | Where-Object {$_.PSIsContainer -eq $true} | Sort-Object
+    #     foreach ($i in $colItems)
+    #     {
+    #         $subFolderItems = Get-ChildItem $i.FullName -recurse -force | Where-Object {$_.PSIsContainer -eq $false} | Measure-Object -property Length -sum | Select-Object Sum
+    #         $i.FullName + " -- " + "{0:N2}" -f ($subFolderItems.sum / 1MB) + " MB"
+    #     }
 
     - name: Clean Up Windows
       if: startsWith(matrix.os, 'windows')
