@@ -54,6 +54,13 @@ jobs:
             bits: 64
 
     steps:
+
+    - name: Configure Ubuntu
+      if: startsWith(${{matrix.os}}, ubuntu)
+      shell: bash
+        sudo apt-get install gcc-multilib
+        sudo apt-get install g++-multilib
+
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
       run: |
@@ -68,26 +75,41 @@ jobs:
         LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
         LLVM_INSTALL_TGZ="${_ROOT}/${LLVM_ID}.tgz"
         LLVM_INSTALL_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
-        LLVM_COMMIT_TXT="${_ROOT}/${LLVM_ID}.commit.txt"
-        LLVM_COMMIT_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.commit.txt"
+        LLVM_COMMIT_HASH_FILE=".halide_builder_llvm_commit"
 
-        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_INSTALL_URL}; then
+        # if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_INSTALL_URL}; then
+        #   echo "${LLVM_INSTALL_URL} already exists, no need to build"
+        # else
+          # echo "${LLVM_INSTALL_URL} not found, rebuilding"
 
-          echo "${LLVM_INSTALL_URL} already exists, no need to build"
-
+        # Extract the hash of the last llvm we built.
+        # This isn't very efficient, but that's ok.
+        if curl --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}; then
+          LLVM_OLD_COMMIT=`tar -O -xf ~/old_llvm.tgz ${LLVM_COMMIT_HASH_FILE}`
         else
+          LLVM_OLD_COMMIT=bogus
+        fi
+        rm -rf ${_ROOT}/old_llvm.tgz
 
-          echo "${LLVM_INSTALL_URL} not found, rebuilding"
+        echo "LLVM_OLD_COMMIT is ${LLVM_OLD_COMMIT}"
 
-          # du -h -d 2 ${GITHUB_WORKSPACE}
+        # Clone current top of tree.
+        git clone https://github.com/llvm/llvm-project.git \
+          "${LLVM_SOURCE_DIR}" \
+          --branch ${{matrix.llvm_branch}} \
+          --single-branch \
+          --depth 1
 
-          git clone https://github.com/llvm/llvm-project.git \
-            "${LLVM_SOURCE_DIR}" \
-            --branch ${{matrix.llvm_branch}} \
-            --single-branch \
-            --depth 1
+        # Find the new commit.
+        cd ${LLVM_SOURCE_DIR}
+        LLVM_NEW_COMMIT=`git rev-parse HEAD`
 
-          # du -h -d 2 ${LLVM_SOURCE_DIR}
+        echo "LLVM_NEW_COMMIT is ${LLVM_NEW_COMMIT}"
+
+        if [ ${LLVM_NEW_COMMIT} == ${LLVM_OLD_COMMIT} ]; then
+          echo "LLVM is already up to date, no need to rebuild"
+        else
+          echo "LLVM needs rebuilding!"
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
@@ -96,9 +118,9 @@ jobs:
           PARALLEL_JOBS=4
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            # Windows VMs don't have enough RAM to more than this
+            # Windows VMs don't have enough RAM to build more than this
             # concurrently (will fail to compile intermittently)
-            PARALLEL_JOBS=2
+            PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
           fi
@@ -110,11 +132,10 @@ jobs:
             export LD="${LD} -melf_i386 "
           fi
 
-          # TODO: add WebAssembly for trunk
-          # TODO: disable assertions for mingw?
-          # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
           # To conserve limited disk space, we disable as many nonessential
           # targets as possible when configuring
+          # TODO: add WebAssembly for trunk
+          # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
           cmake \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
@@ -148,8 +169,7 @@ jobs:
           # du -h -d 2 ${LLVM_BUILD_DIR}
           # du -h -d 2 ${LLVM_INSTALL_DIR}
 
-          cd ${LLVM_SOURCE_DIR}
-          git rev-parse HEAD > ${LLVM_COMMIT_TXT}
+          echo ${LLVM_NEW_COMMIT} > ${LLVM_INSTALL_DIR}/${LLVM_COMMIT_HASH_FILE}
 
           cd ${LLVM_INSTALL_DIR}
           tar -czf ${LLVM_INSTALL_TGZ} .
@@ -158,11 +178,6 @@ jobs:
             --upload-file ${LLVM_INSTALL_TGZ} \
             --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
             ${LLVM_INSTALL_URL}
-
-          curl \
-            --upload-file ${LLVM_COMMIT_TXT} \
-            --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-            ${LLVM_COMMIT_URL}
 
         fi
 
