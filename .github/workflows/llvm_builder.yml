@@ -61,6 +61,7 @@ jobs:
 
     steps:
     - name: Clean Up Windows
+      if: startsWith(matrix.os, 'windows')
       shell: bash
       run: |
         # Remove preinstalled stuff on the Windows VM that takes a lot of
@@ -69,16 +70,16 @@ jobs:
         set -eux
 
         echo "C"
-        du -h -d 2 "C:/Program Files"
+        sudo du -h -d 2 "C:/Program Files"
 
         echo "C2"
-        du -h -d 2 "C:/Program Files (x86)"
+        sudo du -h -d 2 "C:/Program Files (x86)"
 
         echo "D"
-        du -h -d 2 "D:/Program Files"
+        sudo du -h -d 2 "D:/Program Files"
 
         echo "D2"
-        du -h -d 2 "D:/Program Files (x86)"
+        sudo du -h -d 2 "D:/Program Files (x86)"
 
         exit 23
 
