@@ -160,11 +160,19 @@ jobs:
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
             -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
+            -D LLVM_BUILD_BENCHMARKS=OFF \
+            -D LLVM_BUILD_EXAMPLES=OFF \
+            -D LLVM_BUILD_TESTS=OFF \
             -D LLVM_ENABLE_ASSERTIONS=ON \
+            -D LLVM_ENABLE_DIA_SDK=OFF \
+            -D LLVM_ENABLE_EH=OFF \
             -D LLVM_ENABLE_PROJECTS="clang;lld" \
             -D LLVM_ENABLE_RTTI=ON \
             -D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF \
             -D LLVM_ENABLE_TERMINFO=OFF \
+            -D LLVM_INCLUDE_BENCHMARKS=OFF \
+            -D LLVM_INCLUDE_EXAMPLES=OFF \
+            -D LLVM_INCLUDE_TESTS=OFF \
             -D LLVM_INSTALL_TOOLCHAIN_ONLY=ON \
             -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
@@ -174,25 +182,26 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          # PARALLEL_JOBS=4
-          # cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+          PARALLEL_JOBS=4
+          cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
 
-          # du -h -d 2 ${LLVM_BUILD_DIR}
-          # du -h -d 2 ${LLVM_INSTALL_DIR}
+          du -h -d 2 ${LLVM_BUILD_DIR}
+          du -h -d 2 ${LLVM_INSTALL_DIR}
 
-          # cd ${LLVM_SOURCE_DIR}
-          # git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
+          cd ${LLVM_SOURCE_DIR}
+          git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
 
-          # tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
+          tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
 
-          # curl \
-          #   --upload-file ${LLVM_INSTALL_TGZ} \
-          #   --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-          #   ${LLVM_URL}
+          curl \
+            --upload-file ${LLVM_INSTALL_TGZ} \
+            --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
+            ${LLVM_URL}
 
         fi
 
     - name: Report llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
+      if: failure()
       shell: bash
       run: |
         set -eux
@@ -214,9 +223,9 @@ jobs:
         # echo LLVM_INSTALL_DIR
         # du -h -d 2 ${LLVM_INSTALL_DIR}
 
-    - uses: actions/upload-artifact@v1
-      with:
-        name: my-artifact
-        path: ${LLVM_BUILD_DIR}
+    # - uses: actions/upload-artifact@v1
+    #   with:
+    #     name: my-artifact
+    #     path: ${LLVM_BUILD_DIR}
 
 
