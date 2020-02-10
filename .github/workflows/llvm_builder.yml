@@ -69,7 +69,6 @@ jobs:
         # actually build)
         set -eux
 
-        # Boost: ~4GB
         # sudo rm -rf "C:/Program Files/Boost"
         # sudo rm -rf "C:/Program Files/Unity"
 
