@@ -10,7 +10,7 @@ jobs:
       CXX: ${{matrix.cxx}}
 
     strategy:
-      fail-fast: false  # Keep running even if one job fails
+      fail-fast: true  # TODO # Keep running even if one job fails
       matrix:
         arch: [x86]
         # bits: [32, 64]
@@ -60,6 +60,28 @@ jobs:
             bits: 32
 
     steps:
+    - name: Clean Up Windows
+      shell: bash
+      run: |
+        # Remove preinstalled stuff on the Windows VM that takes a lot of
+        # space but is unimportant to us (so that we have enough space to
+        # actually build)
+        set -eux
+
+        echo "C"
+        du -h -d 2 "C:/Program Files"
+
+        echo "C2"
+        du -h -d 2 "C:/Program Files (x86)"
+
+        echo "D"
+        du -h -d 2 "D:/Program Files"
+
+        echo "D2"
+        du -h -d 2 "D:/Program Files (x86)"
+
+        exit 23
+
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
       run: |
