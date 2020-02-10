@@ -78,14 +78,9 @@ jobs:
         LLVM_INSTALL_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
         LLVM_COMMIT_HASH_FILE=".halide_builder_llvm_commit"
 
-        # if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_INSTALL_URL}; then
-        #   echo "${LLVM_INSTALL_URL} already exists, no need to build"
-        # else
-          # echo "${LLVM_INSTALL_URL} not found, rebuilding"
-
         # Extract the hash of the last llvm we built.
         # This isn't very efficient, but that's ok.
-        if curl --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}; then
+        if curl --fail --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}; then
           LLVM_OLD_COMMIT=`tar -O -xf ~/old_llvm.tgz ${LLVM_COMMIT_HASH_FILE}`
         else
           LLVM_OLD_COMMIT=bogus
