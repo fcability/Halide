@@ -62,7 +62,7 @@ jobs:
     steps:
     - name: foo
       shell: powershell
-      run:|
+      run: |
         $path = "$Env:Programfiles"
         $colItems = Get-ChildItem $path | Where-Object {$_.PSIsContainer -eq $true} | Sort-Object
         foreach ($i in $colItems)
