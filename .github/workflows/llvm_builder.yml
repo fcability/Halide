@@ -8,6 +8,7 @@ jobs:
     env:
       CC: ${{matrix.cc}}
       CXX: ${{matrix.cxx}}
+      LD: ld
 
     strategy:
       fail-fast: true  # TODO # Keep running even if one job fails
@@ -16,8 +17,8 @@ jobs:
         # bits: [32, 64]
         bits: [64]
         # os: [windows-latest, ubuntu-18.04, macos-latest]
-        os: [windows-latest]
-        # llvm_version: [8, 9, trunk]
+        os: [ubuntu-18.04]
+        # llvm_version: [8, 9, 10, trunk]
         llvm_version: [8]
         build_tool: [cmake_shared]
         include:
@@ -44,12 +45,6 @@ jobs:
             cc: cl
           - os: windows-latest
             cxx: cl
-          - os: windows-latest
-            cmake_gen: "Visual Studio 16"
-          - os: windows-latest
-            cmake_arch: "x64"
-          - os: windows-latest
-            cmake_toolset: "host=x64"
 
         exclude:
           # Don't attempt 32-bit builds for macos
@@ -57,55 +52,9 @@ jobs:
             bits: 32
           # TODO
           - os: ubuntu-18.04
-            bits: 32
+            bits: 64
 
     steps:
-    # - name: foo
-    #   shell: powershell
-    #   run: |
-    #     Get-WmiObject -List
-
-    #     Get-WmiObject -Class Win32_logicaldisk
-
-    #     Get-WmiObject -Class Win32_Product
-
-    # - name: foo2
-    #   shell: powershell
-    #   run: |
-    #     $path = "$Env:Programfiles"
-    #     $colItems = Get-ChildItem $path | Where-Object {$_.PSIsContainer -eq $true} | Sort-Object
-    #     foreach ($i in $colItems)
-    #     {
-    #         $subFolderItems = Get-ChildItem $i.FullName -recurse -force | Where-Object {$_.PSIsContainer -eq $false} | Measure-Object -property Length -sum | Select-Object Sum
-    #         $i.FullName + " -- " + "{0:N2}" -f ($subFolderItems.sum / 1MB) + " MB"
-    #     }
-
-    # - name: Clean Up Windows
-    #   if: startsWith(matrix.os, 'windows')
-    #   shell: bash
-    #   run: |
-    #     # Remove preinstalled stuff on the Windows VM that takes a lot of
-    #     # space but is unimportant to us (so that we have enough space to
-    #     # actually build)
-    #     set -eux
-
-    #     # sudo rm -rf "C:/Program Files/Boost"
-    #     # sudo rm -rf "C:/Program Files/Unity"
-
-    #     echo "C"
-    #     sudo du -h -d 2 "C:/Program Files"
-
-    #     echo "C2"
-    #     sudo du -h -d 2 "C:/Program Files (x86)"
-
-    #     echo "D"
-    #     sudo du -h -d 2 "D:/Program Files"
-
-    #     echo "D2"
-    #     sudo du -h -d 2 "D:/Program Files (x86)"
-
-    #     exit 23
-
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
       run: |
@@ -114,27 +63,24 @@ jobs:
         # Demangle Windows names, to simplify CMake stuff later
         _ROOT=${GITHUB_WORKSPACE//\\//}
 
-        export CC="${{matrix.cc}}"
-        export CXX="${{matrix.cxx}}"
-
         LLVM_ID="llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.os}}-${{matrix.bits}}"
         LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
         LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
         LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
         LLVM_INSTALL_TGZ="${_ROOT}/${LLVM_ID}.tgz"
-        LLVM_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
+        LLVM_INSTALL_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
+        LLVM_COMMIT_TXT="${_ROOT}/${LLVM_ID}.commit.txt"
+        LLVM_COMMIT_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.commit.txt"
 
-        # TODO: for trunk, we should tag with git hash somehow -- in url?
+        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_INSTALL_URL}; then
 
-        if curl --output /dev/null --head --silent --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --fail ${LLVM_URL}; then
-
-          echo "${LLVM_URL} already exists, no need to build"
+          echo "${LLVM_INSTALL_URL} already exists, no need to build"
 
         else
 
-          echo "${LLVM_URL} not found, rebuilding"
+          echo "${LLVM_INSTALL_URL} not found, rebuilding"
 
-          du -h -d 2 ${GITHUB_WORKSPACE}
+          # du -h -d 2 ${GITHUB_WORKSPACE}
 
           git clone https://github.com/llvm/llvm-project.git \
             "${LLVM_SOURCE_DIR}" \
@@ -142,21 +88,27 @@ jobs:
             --single-branch \
             --depth 1
 
-          du -h -d 2 ${LLVM_SOURCE_DIR}
+          # du -h -d 2 ${LLVM_SOURCE_DIR}
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
-          CMAKE_GEN="${{matrix.cmake_gen}}"
-          if [ -z "${CMAKE_GEN}" ]; then
-            CMAKE_GEN="Unix Makefiles"
-          fi
+          CMAKE_GEN="Unix Makefiles"
+          EXTRA_DEFS=
+          PARALLEL_JOBS=4
 
           if [[ ${{matrix.os}} == windows* ]]; then
             # Windows VMs don't have enough RAM to more than this
             # concurrently (will fail to compile intermittently)
             PARALLEL_JOBS=2
-          else
-            PARALLEL_JOBS=4
+            EXTRA_DEFS="-A x64 -T host=x64"
+            CMAKE_GEN="Visual Studio 16"
+          fi
+
+          if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
+            EXTRA_DEFS="-D CMAKE_FIND_ROOT_PATH=/usr/lib/i386-linux-gnu -D CMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY"
+            export CC="${CC} -m32 "
+            export CXX="${CXX} -m32 "
+            export LD="${LD} -melf_i386 "
           fi
 
           # TODO: add WebAssembly for trunk
@@ -185,25 +137,33 @@ jobs:
             -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
             -G "${CMAKE_GEN}" \
-            -A "${{matrix.cmake_arch}}" \
-            -T "${{matrix.cmake_toolset}}" \
+            ${EXTRA_DEFS} \
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          cmake --build "${LLVM_BUILD_DIR}" -j ${PARALLEL_JOBS} --target install
+          cmake \
+            --build "${LLVM_BUILD_DIR}" \
+            -j ${PARALLEL_JOBS} \
+            --target install
 
-          du -h -d 2 ${LLVM_BUILD_DIR}
-          du -h -d 2 ${LLVM_INSTALL_DIR}
+          # du -h -d 2 ${LLVM_BUILD_DIR}
+          # du -h -d 2 ${LLVM_INSTALL_DIR}
 
           cd ${LLVM_SOURCE_DIR}
-          git log -n 1 > ${LLVM_INSTALL_DIR}/.halide_build_hash
+          git rev-parse HEAD > ${LLVM_COMMIT_TXT}
 
-          tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
+          cd ${LLVM_INSTALL_DIR}
+          tar -czf ${LLVM_INSTALL_TGZ} .
 
           curl \
             --upload-file ${LLVM_INSTALL_TGZ} \
             --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
-            ${LLVM_URL}
+            ${LLVM_INSTALL_URL}
+
+          curl \
+            --upload-file ${LLVM_COMMIT_TXT} \
+            --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} \
+            ${LLVM_COMMIT_URL}
 
         fi
 
@@ -229,10 +189,3 @@ jobs:
 
         # echo LLVM_INSTALL_DIR
         # du -h -d 2 ${LLVM_INSTALL_DIR}
-
-    # - uses: actions/upload-artifact@v1
-    #   with:
-    #     name: my-artifact
-    #     path: ${LLVM_BUILD_DIR}
-
-
