@@ -130,6 +130,7 @@ jobs:
 
           CMAKE_GEN="Ninja"
           EXTRA_DEFS=
+          PASSTHRU_TOOL_BUILD_OPTIONS=
           PARALLEL_JOBS=4
 
           if [[ ${{matrix.os}} == windows* ]]; then
@@ -138,6 +139,7 @@ jobs:
             PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
+            PASSTHRU_TOOL_BUILD_OPTIONS=" -- /property:StopOnFirstFailure "
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
@@ -182,7 +184,8 @@ jobs:
           cmake \
             --build "${LLVM_BUILD_DIR}" \
             -j ${PARALLEL_JOBS} \
-            --target install
+            --target install \
+            ${PASSTHRU_TOOL_BUILD_OPTIONS}
 
           # du -h -d 2 ${LLVM_BUILD_DIR}
           # du -h -d 2 ${LLVM_INSTALL_DIR}
