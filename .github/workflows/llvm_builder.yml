@@ -55,8 +55,14 @@ jobs:
 
     steps:
 
-    - name: Configure Ubuntu
-      if: startsWith(matrix.os, 'ubuntu')
+    - name: Sniff Windows
+      if: startsWith(matrix.os, 'windows')
+      shell: bash
+      run: |
+        du -h -d 1 "C:/Program Files"
+
+    - name: Configure Ubuntu-32
+      if: startsWith(matrix.os, 'ubuntu') && matrix.bits == 32
       shell: bash
       run: |
         sudo apt-get update
@@ -128,6 +134,10 @@ jobs:
             export LD="${LD} -melf_i386 "
           fi
 
+          if [[ ${{matrix.os}} == macos* ]]; then
+            EXTRA_DEFS="-D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF"
+          fi
+
           # To conserve limited disk space, we disable as many nonessential
           # targets as possible when configuring
           # TODO: add WebAssembly for trunk
@@ -144,7 +154,6 @@ jobs:
             -D LLVM_ENABLE_EH=OFF \
             -D LLVM_ENABLE_PROJECTS="clang;lld" \
             -D LLVM_ENABLE_RTTI=ON \
-            -D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF \
             -D LLVM_ENABLE_TERMINFO=OFF \
             -D LLVM_INCLUDE_BENCHMARKS=OFF \
             -D LLVM_INCLUDE_EXAMPLES=OFF \
