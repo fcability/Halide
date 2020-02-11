@@ -179,17 +179,15 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          ninja -C "${LLVM_BUILD_DIR}" install
-
           # Re-specifying --config here is (apparently) necessary
           # to avoid Windows builds from building some subtargets
           # in Debug mode and using up all available disk space
-          # cmake \
-          #   --build "${LLVM_BUILD_DIR}" \
-          #   --config ${CONFIG} \
-          #   -j ${PARALLEL_JOBS} \
-          #   --target install \
-          #   ${PASSTHRU_TOOL_BUILD_OPTIONS}
+          cmake \
+            --build "${LLVM_BUILD_DIR}" \
+            --config ${CONFIG} \
+            -j ${PARALLEL_JOBS} \
+            --target install \
+            ${PASSTHRU_TOOL_BUILD_OPTIONS}
 
           echo ${LLVM_NEW_COMMIT} > ${LLVM_INSTALL_DIR}/${LLVM_COMMIT_HASH_FILE}
 
@@ -201,6 +199,9 @@ jobs:
 
           echo LLVM_INSTALL_DIR
           du -h -d 2 ${LLVM_INSTALL_DIR}
+
+          echo LLVM_INSTALL_DIR is ${LLVM_INSTALL_DIR}
+          echo LLVM_INSTALL_TGZ is ${LLVM_INSTALL_TGZ}
 
           cd ${LLVM_INSTALL_DIR}
           tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
