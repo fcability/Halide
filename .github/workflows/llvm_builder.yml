@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build_llvm:
-    name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
+    name: llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
     runs-on: ${{matrix.os}}
     env:
       CC: ${{matrix.cc}}
@@ -54,6 +54,13 @@ jobs:
       shell: bash
       run: |
         du -h -d 1 "C:/Program Files"
+        rm -rf "C:/Program Files/Unity"
+
+    - name: Configure Ubuntu
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get install ninja-build
 
     - name: Configure Ubuntu-32
       if: startsWith(matrix.os, 'ubuntu') && matrix.bits == 32
@@ -61,6 +68,16 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install gcc-multilib g++-multilib
+
+    - name: Configure OSX
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        brew install ninja
+
+    - name: Configure Windows
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        choco install ninja
 
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
