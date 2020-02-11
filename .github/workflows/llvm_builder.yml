@@ -86,7 +86,7 @@ jobs:
         # and extracting the value from .halide_builder_llvm_commit.
         # (This isn't very efficient, but that's ok.)
         if curl --fail --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}; then
-          LLVM_OLD_COMMIT=`tar -O -xf ~/old_llvm.tgz ${LLVM_COMMIT_HASH_FILE}`
+          LLVM_OLD_COMMIT=`tar -O -xf ${_ROOT}/old_llvm.tgz ${LLVM_COMMIT_HASH_FILE}`
         else
           LLVM_OLD_COMMIT=bogus
         fi
