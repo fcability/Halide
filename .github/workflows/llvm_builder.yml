@@ -139,7 +139,7 @@ jobs:
             PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
-            PASSTHRU_TOOL_BUILD_OPTIONS=" -- /property:StopOnFirstFailure "
+            PASSTHRU_TOOL_BUILD_OPTIONS=" -- /property:StopOnFirstFailure=true "
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
