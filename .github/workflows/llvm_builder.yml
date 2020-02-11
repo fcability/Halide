@@ -49,12 +49,12 @@ jobs:
 
     steps:
 
-    - name: Sniff Windows
-      if: startsWith(matrix.os, 'windows')
-      shell: bash
-      run: |
-        du -h -d 1 "C:/Program Files"
-        rm -rf "C:/Program Files/Unity"
+    # - name: Sniff Windows
+    #   if: startsWith(matrix.os, 'windows')
+    #   shell: bash
+    #   run: |
+    #     du -h -d 1 "C:/Program Files"
+    #     rm -rf "C:/Program Files/Unity"
 
     - name: Configure Ubuntu
       if: startsWith(matrix.os, 'ubuntu')
