@@ -128,7 +128,7 @@ jobs:
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
-          CMAKE_GEN="Unix Makefiles"
+          CMAKE_GEN="Ninja"
           EXTRA_DEFS=
           PARALLEL_JOBS=4
 
