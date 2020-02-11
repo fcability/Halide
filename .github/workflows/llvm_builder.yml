@@ -14,12 +14,12 @@ jobs:
       fail-fast: true  # TODO # Keep running even if one job fails
       matrix:
         arch: [x86]
-        bits: [32, 64]
+        # bits: [32, 64]
+        bits: [32]
         # os: [windows-latest, ubuntu-18.04, macos-latest]
         os: [ubuntu-18.04]
         # llvm_version: [8, 9, 10, trunk]
         llvm_version: [8]
-        build_tool: [cmake_shared]
         include:
           - llvm_version: 8
             llvm_branch: release/8.x
@@ -46,12 +46,9 @@ jobs:
             cxx: cl
 
         exclude:
-          # Don't attempt 32-bit builds for macos
+          # We don't support 32-bit macos builds
           - os: macos-latest
             bits: 32
-          # TODO
-          - os: ubuntu-18.04
-            bits: 64
 
     steps:
 
@@ -84,8 +81,10 @@ jobs:
         LLVM_INSTALL_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
         LLVM_COMMIT_HASH_FILE=".halide_builder_llvm_commit"
 
-        # Extract the hash of the last llvm we built.
-        # This isn't very efficient, but that's ok.
+        # get the hash of the last llvm we built
+        # by downloading the existing .tgz (if any)
+        # and extracting the value from .halide_builder_llvm_commit.
+        # (This isn't very efficient, but that's ok.)
         if curl --fail --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}; then
           LLVM_OLD_COMMIT=`tar -O -xf ~/old_llvm.tgz ${LLVM_COMMIT_HASH_FILE}`
         else
@@ -115,7 +114,7 @@ jobs:
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
-          CMAKE_GEN="Unix Makefiles"
+          CMAKE_GEN="Ninja"
           EXTRA_DEFS=
           PARALLEL_JOBS=4
 
@@ -124,7 +123,7 @@ jobs:
             # concurrently (will fail to compile intermittently)
             PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
-            CMAKE_GEN="Visual Studio 16"
+            # CMAKE_GEN="Visual Studio 16"
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
