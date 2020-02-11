@@ -11,7 +11,7 @@ jobs:
       LD: ld
 
     strategy:
-      fail-fast: true  # TODO # Keep running even if one job fails
+      fail-fast: false  # Keep running even if one job fails
       matrix:
         arch: [x86]
         bits: [32, 64]
@@ -111,7 +111,7 @@ jobs:
 
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
-          CMAKE_GEN="Ninja"
+          CMAKE_GEN="Unix Makefiles"
           EXTRA_DEFS=
           PARALLEL_JOBS=4
 
@@ -120,7 +120,7 @@ jobs:
             # concurrently (will fail to compile intermittently)
             PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
-            # CMAKE_GEN="Visual Studio 16"
+            CMAKE_GEN="Visual Studio 16"
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
