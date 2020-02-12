@@ -145,26 +145,10 @@ jobs:
           if [[ ${{matrix.os}} == windows* ]]; then
             #EXTRA_DEFS="-A x64 -T host=x64"
             #CMAKE_GEN="Visual Studio 16"
-            # Must use --force-local to avoid tar misinterpreting the : in
-            # a Windows pathname as a hostname.
+            VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
+            chmod +x
+            "${VCVARSALL}"
             set
-            #VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
-            #ls -l "${VCVARSALL}"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/"
-            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
-
-            ls -l "C:/Program Files/Microsoft Visual Studio/"
-            ls -l "C:/Program Files/Microsoft Visual Studio/2019/"
-            ls -l "C:/Program Files/Microsoft Visual Studio/2019/Enterprise"
-            ls -l "C:/Program Files/Microsoft Visual Studio/2019/Enterprise/VC/"
-            ls -l "C:/Program Files/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/"
-            ls -l "C:/Program Files/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
-            #chmod +x
-            exit 23
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
