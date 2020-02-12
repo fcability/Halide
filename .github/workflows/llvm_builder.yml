@@ -33,9 +33,9 @@ jobs:
             cxx: clang++
 
           - os: ubuntu-18.04
-            cc: "ccache gcc "
+            cc: gcc
           - os: ubuntu-18.04
-            cxx: "ccache g++ "
+            cxx: g++
 
           - os: windows-latest
             cc: cl
@@ -53,8 +53,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install ninja-build ccache
-        export PATH=/usr/lib/ccache:$PATH
+        sudo apt-get install ninja-build
 
     - name: Configure Ubuntu-32
       if: startsWith(matrix.os, 'ubuntu') && matrix.bits == 32
@@ -72,9 +71,6 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         choco install ninja
-
-        # curl -L https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg --output clcache.4.2.0.nupkg
-        # choco install clcache --source=.
 
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
       shell: bash
@@ -191,20 +187,23 @@ jobs:
 
           echo ${LLVM_NEW_COMMIT} > ${LLVM_INSTALL_DIR}/${LLVM_COMMIT_HASH_FILE}
 
-          echo LLVM_SOURCE_DIR
-          du -h -d 2 ${LLVM_SOURCE_DIR}
+          # echo LLVM_SOURCE_DIR
+          # du -h -d 2 ${LLVM_SOURCE_DIR}
 
-          echo LLVM_BUILD_DIR
-          du -h -d 2 ${LLVM_BUILD_DIR}
+          # echo LLVM_BUILD_DIR
+          # du -h -d 2 ${LLVM_BUILD_DIR}
 
-          echo LLVM_INSTALL_DIR
-          du -h -d 2 ${LLVM_INSTALL_DIR}
+          # echo LLVM_INSTALL_DIR
+          # du -h -d 2 ${LLVM_INSTALL_DIR}
 
-          echo LLVM_INSTALL_DIR is ${LLVM_INSTALL_DIR}
-          echo LLVM_INSTALL_TGZ is ${LLVM_INSTALL_TGZ}
+          # echo LLVM_INSTALL_DIR is ${LLVM_INSTALL_DIR}
+          # echo LLVM_INSTALL_TGZ is ${LLVM_INSTALL_TGZ}
 
-          cd ${LLVM_INSTALL_DIR}
-          tar -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
+          # cd ${LLVM_INSTALL_DIR}
+
+          # Must use --force-local to avoid tar misinterpreting the : in
+          # a Windows pathname as a hostname.
+          tar --force-local -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
 
           curl \
             --upload-file ${LLVM_INSTALL_TGZ} \
