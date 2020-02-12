@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build_llvm:
-    name: llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.halide_os}}
+    name: llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.bits}}-${{matrix.halide_os}}
     runs-on: ${{matrix.os}}
     env:
       CC: ${{matrix.cc}}
@@ -72,7 +72,7 @@ jobs:
       run: |
         choco install ninja
 
-    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.halide_os}}
+    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.bits}}-${{matrix.halide_os}}
       shell: bash
       run: |
         set -eux
@@ -135,9 +135,6 @@ jobs:
           TAR_FLAGS=
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            # Windows VMs don't have enough RAM to build more than this
-            # concurrently (will fail to compile intermittently)
-            PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
