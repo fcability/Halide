@@ -3,7 +3,7 @@ on: push
 
 jobs:
   build_llvm:
-    name: llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
+    name: llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.halide_os}}
     runs-on: ${{matrix.os}}
     env:
       CC: ${{matrix.cc}}
@@ -29,18 +29,18 @@ jobs:
 
           - os: macos-latest
             cc: clang
-          - os: macos-latest
             cxx: clang++
+            halide_os: osx
 
           - os: ubuntu-18.04
             cc: gcc
-          - os: ubuntu-18.04
             cxx: g++
+            halide_os: linux
 
           - os: windows-latest
             cc: cl
-          - os: windows-latest
             cxx: cl
+            halide_os: windows
 
         exclude:
           # We don't support 32-bit macos builds
@@ -72,7 +72,7 @@ jobs:
       run: |
         choco install ninja
 
-    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
+    - name: Build llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.halide_os}}
       shell: bash
       run: |
         set -eux
@@ -80,7 +80,7 @@ jobs:
         # Demangle Windows names, to simplify CMake stuff later
         _ROOT=${GITHUB_WORKSPACE//\\//}
 
-        LLVM_ID="llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.os}}-${{matrix.bits}}"
+        LLVM_ID="llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.bits}}-${{matrix.halide_os}}"
         LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
         LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
         LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
@@ -131,8 +131,8 @@ jobs:
           CMAKE_GEN="Ninja"
           CONFIG=Release
           EXTRA_DEFS=
-          PASSTHRU_TOOL_BUILD_OPTIONS=
-          PARALLEL_JOBS=4
+          PARALLEL_JOBS=4  # GHA VMs have 2 cores
+          TAR_FLAGS=
 
           if [[ ${{matrix.os}} == windows* ]]; then
             # Windows VMs don't have enough RAM to build more than this
@@ -140,7 +140,9 @@ jobs:
             PARALLEL_JOBS=3
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
-            PASSTHRU_TOOL_BUILD_OPTIONS=" -- /property:StopOnFirstFailure=true "
+            # Must use --force-local to avoid tar misinterpreting the : in
+            # a Windows pathname as a hostname.
+            TAR_FLAGS=" --force-local "
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
@@ -182,36 +184,19 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-          # Re-specifying --config here is (apparently) necessary
+          # Re-specifying --config here is essential
           # to avoid Windows builds from building some subtargets
           # in Debug mode and using up all available disk space
           cmake \
             --build "${LLVM_BUILD_DIR}" \
             --config ${CONFIG} \
             -j ${PARALLEL_JOBS} \
-            --target install \
-            ${PASSTHRU_TOOL_BUILD_OPTIONS}
+            --target install
 
           echo ${LLVM_NEW_COMMIT} > ${LLVM_INSTALL_DIR}/${LLVM_COMMIT_HASH_FILE}
 
-          # echo LLVM_SOURCE_DIR
-          # du -h -d 2 ${LLVM_SOURCE_DIR}
-
-          # echo LLVM_BUILD_DIR
-          # du -h -d 2 ${LLVM_BUILD_DIR}
-
-          # echo LLVM_INSTALL_DIR
-          # du -h -d 2 ${LLVM_INSTALL_DIR}
-
-          # echo LLVM_INSTALL_DIR is ${LLVM_INSTALL_DIR}
-          # echo LLVM_INSTALL_TGZ is ${LLVM_INSTALL_TGZ}
-
-          # cd ${LLVM_INSTALL_DIR}
-
-          # Must use --force-local to avoid tar misinterpreting the : in
-          # a Windows pathname as a hostname.
           cd ${LLVM_INSTALL_DIR}
-          tar --force-local -czf ${LLVM_INSTALL_TGZ} .
+          tar ${TAR_FLAGS} -czf ${LLVM_INSTALL_TGZ} .
 
           curl \
             --upload-file ${LLVM_INSTALL_TGZ} \
@@ -220,25 +205,3 @@ jobs:
 
         fi
 
-    - name: Report llvm-${{matrix.llvm_version}}-${{matrix.bits}}-${{matrix.os}}
-      if: failure()
-      shell: bash
-      run: |
-        set -eux
-
-        # Demangle Windows names, to simplify CMake stuff later
-        _ROOT=${GITHUB_WORKSPACE//\\//}
-
-        LLVM_ID="llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.os}}-${{matrix.bits}}"
-        LLVM_SOURCE_DIR="${_ROOT}/${LLVM_ID}-source"
-        LLVM_BUILD_DIR="${_ROOT}/${LLVM_ID}-build"
-        LLVM_INSTALL_DIR="${_ROOT}/${LLVM_ID}-install"
-
-        echo LLVM_SOURCE_DIR
-        du -h -d 2 ${LLVM_SOURCE_DIR}
-
-        echo LLVM_BUILD_DIR
-        du -h -d 2 ${LLVM_BUILD_DIR}
-
-        # echo LLVM_INSTALL_DIR
-        # du -h -d 2 ${LLVM_INSTALL_DIR}
