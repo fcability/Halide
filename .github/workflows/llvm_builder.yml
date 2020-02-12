@@ -89,6 +89,13 @@ jobs:
         LLVM_INSTALL_URL="https://buildbot.halide-lang.org/llvm/${LLVM_ID}.tgz"
         LLVM_COMMIT_HASH_FILE=".halide_builder_llvm_commit"
 
+        TAR_FLAGS=
+        if [[ ${{matrix.os}} == windows* ]]; then
+          # Must use --force-local to avoid tar misinterpreting the : in
+          # a Windows pathname as a hostname.
+          TAR_FLAGS=" --force-local "
+        fi
+
         # get the hash of the last llvm we built
         # by downloading the existing .tgz (if any)
         # and extracting the value from .halide_builder_llvm_commit.
@@ -98,7 +105,7 @@ jobs:
         LLVM_OLD_COMMIT=bogus
         curl --fail --user llvm_user:${{secrets.LLVM_USER_PASSWORD}} --output ${_ROOT}/old_llvm.tgz ${LLVM_INSTALL_URL}
         if [ $? -eq 0 ]; then
-          LLVM_OLD_COMMIT=`tar -O -xf ${_ROOT}/old_llvm.tgz ./${LLVM_COMMIT_HASH_FILE}`
+          LLVM_OLD_COMMIT=`tar ${TAR_FLAGS} -O -xf ${_ROOT}/old_llvm.tgz ./${LLVM_COMMIT_HASH_FILE}`
           if [ $? -ne 0 ]; then
             LLVM_OLD_COMMIT=bogus_2
           fi
@@ -108,7 +115,6 @@ jobs:
         rm -rf ${_ROOT}/old_llvm.tgz
 
         echo "LLVM_OLD_COMMIT is ${LLVM_OLD_COMMIT}"
-        exit 23
 
         # Clone current top of tree.
         git clone https://github.com/llvm/llvm-project.git \
@@ -134,14 +140,12 @@ jobs:
           CONFIG=Release
           EXTRA_DEFS=
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
-          TAR_FLAGS=
 
           if [[ ${{matrix.os}} == windows* ]]; then
             EXTRA_DEFS="-A x64 -T host=x64"
             CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
             # a Windows pathname as a hostname.
-            TAR_FLAGS=" --force-local "
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
