@@ -146,7 +146,7 @@ jobs:
             #CMAKE_GEN="Visual Studio 16"
             VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
             chmod +x "${VCVARSALL}"
-            "${VCVARSALL}"
+            "${VCVARSALL}" x64
             set
           fi
 
