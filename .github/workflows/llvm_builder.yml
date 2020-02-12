@@ -135,7 +135,7 @@ jobs:
           TAR_FLAGS=
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            EXTRA_DEFS="-A x64 -T host=x64"
+            # EXTRA_DEFS="-A x64 -T host=x64"
             # CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
             # a Windows pathname as a hostname.
