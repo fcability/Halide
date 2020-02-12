@@ -203,7 +203,8 @@ jobs:
 
           # Must use --force-local to avoid tar misinterpreting the : in
           # a Windows pathname as a hostname.
-          tar --force-local -czf ${LLVM_INSTALL_TGZ} ${LLVM_INSTALL_DIR}
+          cd ${LLVM_INSTALL_DIR}
+          tar --force-local -czf ${LLVM_INSTALL_TGZ} .
 
           curl \
             --upload-file ${LLVM_INSTALL_TGZ} \
