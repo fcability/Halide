@@ -38,8 +38,8 @@ jobs:
             halide_os: linux
 
           - os: windows-latest
-            cc: cl
-            cxx: cl
+            cc: cl.exe
+            cxx: cl.exe
             halide_os: windows
 
         exclude:
@@ -156,7 +156,8 @@ jobs:
           # To conserve limited disk space, we disable as many nonessential
           # targets as possible when configuring
           # TODO: add WebAssembly for trunk
-          # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is evil
+          # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is temporary,
+          # until MSVC 16.5 is available
           cmake \
             -D CMAKE_BUILD_TYPE=${CONFIG} \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
