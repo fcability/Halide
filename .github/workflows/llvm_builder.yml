@@ -15,7 +15,8 @@ jobs:
       matrix:
         arch: [x86]
         bits: [32, 64]
-        os: [windows-latest, ubuntu-18.04, macos-latest]
+        # os: [windows-latest, ubuntu-18.04, macos-latest]
+        os: [windows-latest]
         llvm_version: [8, 9, 10, trunk]
         include:
           - llvm_version: 8
@@ -142,10 +143,16 @@ jobs:
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            EXTRA_DEFS="-A x64 -T host=x64"
-            CMAKE_GEN="Visual Studio 16"
+            #EXTRA_DEFS="-A x64 -T host=x64"
+            #CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
             # a Windows pathname as a hostname.
+            set
+            VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
+            ls -l "${VCVARSALL}"
+            ls -l "C:/Program Files/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
+            #chmod +x
+            exit 23
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
