@@ -150,6 +150,14 @@ jobs:
             set
             #VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
             #ls -l "${VCVARSALL}"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/"
+            ls -l "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
+
+            ls -l "C:/Program Files/Microsoft Visual Studio/"
             ls -l "C:/Program Files/Microsoft Visual Studio/2019/"
             ls -l "C:/Program Files/Microsoft Visual Studio/2019/Community"
             ls -l "C:/Program Files/Microsoft Visual Studio/2019/Community/VC/"
