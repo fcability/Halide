@@ -71,8 +71,7 @@ jobs:
     - name: Configure Windows
       if: startsWith(matrix.os, 'windows')
       run: |
-        # We don't use ninja on Windows (yet)
-        # choco install ninja
+        choco install ninja
 
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.bits}}-${{matrix.halide_os}}
       shell: bash
