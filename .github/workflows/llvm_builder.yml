@@ -144,11 +144,11 @@ jobs:
           if [[ ${{matrix.os}} == windows* ]]; then
             #EXTRA_DEFS="-A x64 -T host=x64"
             #CMAKE_GEN="Visual Studio 16"
-            VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
-            # chmod +x "${VCVARSALL}"
-            set
-            "${VCVARSALL}" amd64
-            set
+            # VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
+            # "${VCVARSALL}" x64
+            VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
+            "${VSDEVCMD}" -host_arch=x64
+
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
