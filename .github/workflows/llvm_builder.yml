@@ -147,8 +147,8 @@ jobs:
             # VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
             # "${VCVARSALL}" x64
             VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
-            "${VSDEVCMD}" -host_arch=x64
-
+            MYVARS=`cmd /c "${VSDEVCMD} -host_arch=x64 && set"`
+            echo $MYVARS
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
