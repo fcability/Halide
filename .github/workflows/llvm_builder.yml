@@ -108,6 +108,7 @@ jobs:
         rm -rf ${_ROOT}/old_llvm.tgz
 
         echo "LLVM_OLD_COMMIT is ${LLVM_OLD_COMMIT}"
+        exit 23
 
         # Clone current top of tree.
         git clone https://github.com/llvm/llvm-project.git \
