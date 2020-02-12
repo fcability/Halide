@@ -182,7 +182,7 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
-#            -j ${PARALLEL_JOBS} \
+          # -j ${PARALLEL_JOBS} \
 
           # Re-specifying --config here is essential
           # to avoid Windows builds from building some subtargets
