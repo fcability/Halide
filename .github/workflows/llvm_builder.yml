@@ -136,7 +136,7 @@ jobs:
 
           if [[ ${{matrix.os}} == windows* ]]; then
             EXTRA_DEFS="-A x64 -T host=x64"
-            CMAKE_GEN="Visual Studio 16"
+            # CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
             # a Windows pathname as a hostname.
             TAR_FLAGS=" --force-local "
@@ -182,13 +182,14 @@ jobs:
             -B "${LLVM_BUILD_DIR}" \
             -S "${LLVM_SOURCE_DIR}/llvm"
 
+#            -j ${PARALLEL_JOBS} \
+
           # Re-specifying --config here is essential
           # to avoid Windows builds from building some subtargets
           # in Debug mode and using up all available disk space
           cmake \
             --build "${LLVM_BUILD_DIR}" \
             --config ${CONFIG} \
-            -j ${PARALLEL_JOBS} \
             --target install
 
           echo ${LLVM_NEW_COMMIT} > ${LLVM_INSTALL_DIR}/${LLVM_COMMIT_HASH_FILE}
