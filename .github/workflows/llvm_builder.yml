@@ -146,8 +146,10 @@ jobs:
             #CMAKE_GEN="Visual Studio 16"
             # VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
             # "${VCVARSALL}" x64
-            VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
-            MYVARS=`cmd /c "${VSDEVCMD} -host_arch=x64 && set"`
+            VSDEVCMD_DIR="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools"
+            # VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
+            cd "${VSDEVCMD_DIR}"
+            MYVARS=`cmd /c "VsDevCmd.bat -host_arch=x64 && set"`
             echo $MYVARS
           fi
 
