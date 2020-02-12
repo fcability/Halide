@@ -149,8 +149,8 @@ jobs:
             VSDEVCMD_DIR="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools"
             # VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
             cd "${VSDEVCMD_DIR}"
-            MYVARS=`cmd /c "VsDevCmd.bat -host_arch=x64 && set"`
-            echo $MYVARS
+            cmd /c "VsDevCmd.bat -host_arch=x64 && set" > /tmp/vs_env_vars.txt
+            cat /tmp/vs_env_vars.txt
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
