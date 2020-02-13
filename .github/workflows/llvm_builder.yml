@@ -15,8 +15,7 @@ jobs:
       matrix:
         arch: [x86]
         bits: [32, 64]
-        # os: [windows-latest, ubuntu-18.04, macos-latest]
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-18.04, macos-latest]
         llvm_version: [8, 9, 10, trunk]
         include:
           - llvm_version: 8
@@ -71,7 +70,8 @@ jobs:
     - name: Configure Windows
       if: startsWith(matrix.os, 'windows')
       run: |
-        choco install ninja
+        # We don't use ninja on Windows (yet)
+        # choco install ninja
 
     - name: Build llvm-${{matrix.llvm_version}}-${{matrix.arch}}-${{matrix.bits}}-${{matrix.halide_os}}
       shell: bash
@@ -142,15 +142,10 @@ jobs:
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            #EXTRA_DEFS="-A x64 -T host=x64"
-            #CMAKE_GEN="Visual Studio 16"
-            # VCVARSALL="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvarsall.bat"
-            # "${VCVARSALL}" x64
-            VSDEVCMD_DIR="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools"
-            # VSDEVCMD="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/VsDevCmd.bat"
-            cd "${VSDEVCMD_DIR}"
-            cmd /c "VsDevCmd.bat -host_arch=x64 && set" > /tmp/vs_env_vars.txt
-            cat /tmp/vs_env_vars.txt
+            EXTRA_DEFS="-A x64 -T host=x64"
+            CMAKE_GEN="Visual Studio 16"
+            # Must use --force-local to avoid tar misinterpreting the : in
+            # a Windows pathname as a hostname.
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
