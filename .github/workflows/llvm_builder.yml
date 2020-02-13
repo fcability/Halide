@@ -168,9 +168,6 @@ jobs:
             EXTRA_DEFS="-D LLVM_ENABLE_SUPPORT_XCODE_SIGNPOSTS=FORCE_OFF"
           fi
 
-          # To conserve limited disk space, we disable as many nonessential
-          # targets as possible when configuring
-          # TODO: add WebAssembly for trunk
           # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is temporary,
           # until MSVC 16.5 is available
           cmake \
@@ -181,7 +178,7 @@ jobs:
             -D LLVM_ENABLE_PROJECTS="clang;lld" \
             -D LLVM_ENABLE_RTTI=ON \
             -D LLVM_ENABLE_TERMINFO=OFF \
-            -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
+            -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon;WebAssembly" \
             -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
             -G "${CMAKE_GEN}" \
             ${EXTRA_DEFS} \
