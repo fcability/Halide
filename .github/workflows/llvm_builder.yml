@@ -143,9 +143,9 @@ jobs:
 
           if [[ ${{matrix.os}} == windows* ]]; then
             if [[ ${{matrix.bits}} == 64 ]]; then
-              EXTRA_DEFS="-A x64 -T host=x64"
+              EXTRA_DEFS=" -T host=x64 -A x64 "
             else
-              EXTRA_DEFS="-A x86 -T host=x64"
+              EXTRA_DEFS=" -T host=x64 "
             fi
             CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
