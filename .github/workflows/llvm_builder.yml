@@ -147,14 +147,13 @@ jobs:
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
 
           if [[ ${{matrix.os}} == windows* ]]; then
+            # TODO: can we use Ninja with MSVC? It might be faster.
             if [[ ${{matrix.bits}} == 64 ]]; then
               EXTRA_DEFS=" -T host=x64 -A x64 "
             else
               EXTRA_DEFS=" -T host=x64 "
             fi
             CMAKE_GEN="Visual Studio 16"
-            # Must use --force-local to avoid tar misinterpreting the : in
-            # a Windows pathname as a hostname.
           fi
 
           if [[ ${{matrix.os}} == ubuntu* && ${{matrix.bits}} == 32 ]]; then
