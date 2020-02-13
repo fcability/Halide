@@ -1,5 +1,10 @@
 name: Halide LLVM Builder
-on: push
+on:
+  # Run every day at 1AM (...presumably US Pacific Time?)
+  schedule:
+    - cron:  '0 1 * * *'
+  # Run immediately after every push (only for debugging)
+  push:
 
 jobs:
   build_llvm:
