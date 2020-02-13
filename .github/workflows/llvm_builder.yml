@@ -142,7 +142,11 @@ jobs:
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
 
           if [[ ${{matrix.os}} == windows* ]]; then
-            EXTRA_DEFS="-A x64 -T host=x64"
+            if [[ ${{matrix.bits}} == 64 ]]; then
+              EXTRA_DEFS="-A x64 -T host=x64"
+            else
+              EXTRA_DEFS="-A x86 -T host=x64"
+            fi
             CMAKE_GEN="Visual Studio 16"
             # Must use --force-local to avoid tar misinterpreting the : in
             # a Windows pathname as a hostname.
@@ -168,19 +172,10 @@ jobs:
             -D CMAKE_BUILD_TYPE=${CONFIG} \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
             -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
-            -D LLVM_BUILD_BENCHMARKS=OFF \
-            -D LLVM_BUILD_EXAMPLES=OFF \
-            -D LLVM_BUILD_TESTS=OFF \
             -D LLVM_ENABLE_ASSERTIONS=ON \
-            -D LLVM_ENABLE_DIA_SDK=OFF \
-            -D LLVM_ENABLE_EH=OFF \
             -D LLVM_ENABLE_PROJECTS="clang;lld" \
             -D LLVM_ENABLE_RTTI=ON \
             -D LLVM_ENABLE_TERMINFO=OFF \
-            -D LLVM_INCLUDE_BENCHMARKS=OFF \
-            -D LLVM_INCLUDE_EXAMPLES=OFF \
-            -D LLVM_INCLUDE_TESTS=OFF \
-            -D LLVM_INSTALL_TOOLCHAIN_ONLY=ON \
             -D LLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" \
             -D LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
             -G "${CMAKE_GEN}" \
