@@ -137,7 +137,7 @@ jobs:
           LLVM_BUILD_32_BITS=$([ ${{matrix.bits}} == 32 ] && echo "ON" || echo "OFF")
 
           CMAKE_GEN="Ninja"
-          CONFIG=Release
+          BUILD_TYPE=Release
           EXTRA_DEFS=
           PARALLEL_JOBS=4  # GHA VMs have 2 cores
 
@@ -169,7 +169,7 @@ jobs:
           # TODO: LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN is temporary,
           # until MSVC 16.5 is available
           cmake \
-            -D CMAKE_BUILD_TYPE=${CONFIG} \
+            -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -D CMAKE_INSTALL_PREFIX="${LLVM_INSTALL_DIR}" \
             -D LLVM_BUILD_32_BITS=${LLVM_BUILD_32_BITS} \
             -D LLVM_ENABLE_ASSERTIONS=ON \
@@ -188,7 +188,7 @@ jobs:
           # in Debug mode and using up all available disk space
           cmake \
             --build "${LLVM_BUILD_DIR}" \
-            --config ${CONFIG} \
+            --config ${BUILD_TYPE} \
             -j ${PARALLEL_JOBS} \
             --target install
 
